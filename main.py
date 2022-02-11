@@ -26,7 +26,7 @@ def redeploy():
         content = request.get_json()
     except Exception:
         print("didnt get any post data")
-    call("./subprocess.sj")
+    call("./subprocess.sh")
     client.loop.create_task(toDo.send("Push to toDo...web server redeploying..."))
     return "", 200
 
