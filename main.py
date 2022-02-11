@@ -26,7 +26,7 @@ def redeploy():
         content = request.get_json()
     except Exception:
         print("didnt get any post data")
-    call("./subprocess.sh")
+    call("./redeploy.sh")
     client.loop.create_task(toDo.send("Push to toDo...web server redeploying..."))
     return "", 200
 
@@ -39,6 +39,8 @@ def stop():
 
 @client.event
 async def on_ready():
+    fl = Process(target=start_flask())
+    fl.start()
     print("ready")
     global toDo
     channels = client.get_all_channels()
@@ -76,16 +78,14 @@ def start_flask():
 
 
 async def main():
-    fl = Process(target=start_flask())
-    fl.start()
-
     try:
         start_discord()
     except Exception:
         print("Something broke")
     finally:
+        pass
         await messageQ.put("STOP")
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     asyncio.run(main())
