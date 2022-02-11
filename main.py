@@ -20,9 +20,15 @@ toDo = None
 
 messageQ = asyncio.Queue()
 
-def redployScript():
+
+def redeploy_script():
     call("./redeploy.sh")
     client.loop.create_task(toDo.send("Server Running"))
+
+
+def redeploy_thread():
+    deploy = threading.Thread(target=redeploy_script)
+    deploy.start()
 
 
 @flask.route("/", methods=["POST", "GET"])
@@ -31,8 +37,7 @@ def redeploy():
         content = request.get_json()
     except Exception:
         print("didnt get any post data")
-    script = threading.Thread(target=redployScript)
-    script.start()
+    redeploy_thread()
     client.loop.create_task(toDo.send("Push to toDo...web server redeploying..."))
     return "", 200
 
@@ -53,6 +58,7 @@ async def on_ready():
             toDo = channel
             fl = threading.Thread(target=start_flask)
             fl.start()
+            redeploy_thread()
 
 
 async def stop_discord():
