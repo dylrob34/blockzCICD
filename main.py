@@ -1,5 +1,6 @@
 from flask import Flask, request
 import discord
+import threading
 from subprocess import call
 from multiprocessing import Process
 import asyncio
@@ -19,6 +20,10 @@ toDo = None
 
 messageQ = asyncio.Queue()
 
+def redployScript():
+    call("./redeploy.sh")
+    client.loop.create_task(toDo.send("Server Running"))
+
 
 @flask.route("/", methods=["POST", "GET"])
 def redeploy():
@@ -26,8 +31,8 @@ def redeploy():
         content = request.get_json()
     except Exception:
         print("didnt get any post data")
-    os.popen('chmod +x redeploy.sh')
-    call("./redeploy.sh")
+    script = threading.Thread(target=redployScript)
+    script.start()
     client.loop.create_task(toDo.send("Push to toDo...web server redeploying..."))
     return "", 200
 
@@ -40,14 +45,14 @@ def stop():
 
 @client.event
 async def on_ready():
-    fl = Process(target=start_flask())
-    fl.start()
     print("ready")
     global toDo
     channels = client.get_all_channels()
     for channel in channels:
         if channel.name == "todo":
             toDo = channel
+            fl = Process(target=start_flask())
+            fl.start()
 
 
 async def stop_discord():
