@@ -62,30 +62,28 @@ async def stop_discord():
 async def send_discord():
     while True:
         print("Sending Message to Discord")
-        await messageQ.get()
+        mes = await messageQ.get()
+        if mes == "STOP":
+            client.loop.stop()
         await toDo.send("Test Message from a discord bot saying there has been a push to git hub and the web server is being redoployed")
 
 
 def start_discord():
     print("starting discord")
-    client.loop.create_task(stop_discord())
     client.run(os.environ.get("TOKEN"))
     sys.exit(0)
+
 
 def start_flask():
     flask.run(host="0.0.0.0", port=3435, debug=False)
 
 
-
-async def main():
+def main():
     try:
         start_discord()
     except Exception:
         print("Something broke")
-    finally:
-        pass
-        await messageQ.put("STOP")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
