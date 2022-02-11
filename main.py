@@ -51,7 +51,7 @@ async def on_ready():
     for channel in channels:
         if channel.name == "todo":
             toDo = channel
-            fl = Process(target=start_flask())
+            fl = Process(target=start_flask)
             fl.start()
 
 
