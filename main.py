@@ -80,10 +80,7 @@ def start_flask():
 
 
 def main():
-    try:
-        start_discord()
-    except Exception:
-        print("Something broke")
+    start_discord()
 
 
 if __name__ == "__main__":
