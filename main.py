@@ -67,7 +67,7 @@ async def main():
     dis.start()
 
     try:
-        flask.run(host="0.0.0.0", port=3435, debug=True)
+        flask.run(host="0.0.0.0", port=3435)
     except Exception:
         print("Something broke")
     finally:
