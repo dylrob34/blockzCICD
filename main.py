@@ -1,7 +1,7 @@
 from flask import Flask, request
 import discord
-import threading
 from subprocess import call
+from multiprocessing import Process
 import asyncio
 import os
 from dotenv import load_dotenv
@@ -20,11 +20,20 @@ toDo = None
 messageQ = asyncio.Queue()
 
 
-@flask.route("/", methods = ["POST"])
+@flask.route("/", methods=["POST", "GET"])
 def redeploy():
-    content = request.get_json()
+    try:
+        content = request.get_json()
+    except Exception:
+        print("didnt get any post data")
     call("./subprocess.sj")
     client.loop.create_task(toDo.send("Push to toDo...web server redeploying..."))
+    return "", 200
+
+
+@flask.route("/stop")
+def stop():
+    client.loop.create_task((toDo.send("STOP")))
     return "", 200
 
 
@@ -61,13 +70,17 @@ def start_discord():
     client.run(os.environ.get("TOKEN"))
     sys.exit(0)
 
+def start_flask():
+    flask.run(host="0.0.0.0", port=3435, debug=False)
+
+
 
 async def main():
-    dis = threading.Thread(target=start_discord)
-    dis.start()
+    fl = Process(target=start_flask())
+    fl.start()
 
     try:
-        flask.run(host="0.0.0.0", port=3435, debug=False)
+        start_discord()
     except Exception:
         print("Something broke")
     finally:
