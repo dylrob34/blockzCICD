@@ -1,6 +1,7 @@
 from flask import Flask, request
 import discord
 import threading
+from subprocess import call
 import asyncio
 import os
 from dotenv import load_dotenv
@@ -22,7 +23,7 @@ messageQ = asyncio.Queue()
 @flask.route("/", methods = ["POST"])
 def redeploy():
     content = request.get_json()
-    print(content)
+    call("./subprocess.sj")
     client.loop.create_task(toDo.send("Push to toDo...web server redeploying..."))
     return "", 200
 
