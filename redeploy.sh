@@ -29,6 +29,3 @@ mv ./frontend/build/* ./backend/build
 cd ./backend
 
 npm start &
-
-curl -fsSL https://deb.nodesource.com/setup_16.14 | sudo -E bash -
-sudo apt-get install -y nodejs
