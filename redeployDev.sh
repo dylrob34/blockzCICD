@@ -5,7 +5,7 @@ echo "Redeploying Blockz"
 pkill "npm start"
 pkill "node"
 
-cd toDo
+cd blockzDev
 
 git pull
 
