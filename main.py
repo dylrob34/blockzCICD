@@ -46,7 +46,7 @@ def redeploy_thread(func):
 
 
 @flask.route("/redeployDev", methods=["POST", "GET"])
-def redeploy():
+def redeployDev():
     try:
         content = request.get_json()
     except Exception:
@@ -56,7 +56,7 @@ def redeploy():
 
 
 @flask.route("/redeployProd", methods=["POST", "GET"])
-def redeploy():
+def redeployProd():
     try:
         content = request.get_json()
     except Exception:
@@ -95,11 +95,11 @@ async def on_ready():
     for channel in channels:
         if channel.name == "blockz":
             blockz = channel
-            fl = threading.Thread(target=start_flask)
-            fl.start()
-            redeploy_thread(redeploy_dev)
         if channel.name == "ci_cd":
             cicd = channel
+    fl = threading.Thread(target=start_flask)
+    fl.start()
+    redeploy_thread(redeploy_dev)
 
 
 async def stop_discord():
