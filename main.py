@@ -97,7 +97,7 @@ async def on_ready():
             blockz = channel
             fl = threading.Thread(target=start_flask)
             fl.start()
-            redeploy_thread()
+            redeploy_thread(redeploy_dev)
         if channel.name == "ci_cd":
             cicd = channel
 
