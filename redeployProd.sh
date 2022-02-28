@@ -6,6 +6,5 @@ cd blockzProd
 
 git pull
 
-docker build -t dylrob34/blockz:latest .
+docker buildx build --platform linux/amd64 -t dylrob34/blockz:latest --push .
 
-docker push dylrob34/blockz:latest
