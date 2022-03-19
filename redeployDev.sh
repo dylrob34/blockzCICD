@@ -2,8 +2,9 @@
 
 echo "Redeploying Blockz"
 
-pkill "npm start"
-pkill "node"
+docker stop $(docker ps -a -q --filter ancestor=dylrob34/blockz:dev --format="{{.ID}}")
+
+docker image rm dylrob34/blockz:dev
 
 cd blockzDev
 
@@ -26,6 +27,7 @@ cd ..
 
 mv ./frontend/build/* ./backend/build
 
-cd ./backend
+docker build -t dylrob34/blockz:dev .
 
-npm start &
+docker run -p 3001:3001 -d --rm dylrob34/blockz:dev
+

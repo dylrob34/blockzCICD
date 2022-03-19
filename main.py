@@ -1,12 +1,15 @@
+from math import prod
 from flask import Flask, request
 import discord
 import threading
 from subprocess import call
+import subprocess
 from multiprocessing import Process
 import asyncio
 import os
 from dotenv import load_dotenv
 import sys
+import json
 
 load_dotenv()
 
@@ -18,6 +21,8 @@ client = discord.Client()
 
 blockz = None
 cicd = None
+dev_crashes = None
+prod_crashes = None
 
 messageQ = asyncio.Queue()
 
@@ -27,15 +32,16 @@ deploy_semaphore = threading.Semaphore()
 def redeploy_dev():
     deploy_semaphore.acquire()
     client.loop.create_task(cicd.send("Push to blockz...dev server redeploying"))
-    call("./redeployDev.sh")
-    client.loop.create_task(cicd.send("Server Running"))
+    subprocess.Popen(["chmod", "-x", "redeployDev.sh"])
+    subprocess.Popen(["bash", "redeployDev.sh"])
     deploy_semaphore.release()
 
 
 def redeploy_prod():
     deploy_semaphore.acquire()
     client.loop.create_task(cicd.send("Blockz PR...building new image and redeploying cloud server"))
-    call("./redeployProd.sh")
+    subprocess.Popen(["chmod", "-x", "redeployProd.sh"])
+    subprocess.Popen(["bash", "redeployProd.sh"])
     client.loop.create_task(cicd.send("Pushed to Docker Hub"))
     deploy_semaphore.release()
 
@@ -45,28 +51,36 @@ def redeploy_thread(func):
     deploy.start()
 
 
-@flask.route("/redeployDev", methods=["POST", "GET"])
-def redeployDev():
+@flask.route("/github", methods=["POST", "GET"])
+def github():
     try:
         content = request.get_json()
+        branch = str(content["ref"]).split("/")[-1]
+        if branch == "dev":
+            redeploy_thread(redeploy_dev)
+        elif branch == "main":
+            redeploy_thread(redeploy_prod)
     except Exception:
         print("didnt get any post data")
-    redeploy_thread(redeploy_dev)
     return "", 200
 
 
-@flask.route("/redeployProd", methods=["POST", "GET"])
-def redeployProd():
-    try:
-        content = request.get_json()
-    except Exception:
-        print("didnt get any post data")
-    redeploy_thread(redeploy_prod)
+@flask.route("/devcrash", methods=["POST"])
+def devcrash():
+    content = request.get_json()
+    client.loop.create_task(dev_crashes.send(content["message"]))
     return "", 200
 
 
-@flask.route("/notifycrash", methods=["POST"])
-def notify():
+@flask.route("/prodcrash", methods=["POST"])
+def prodcrash():
+    content = request.get_json()
+    client.loop.create_task(prod_crashes.send(content["message"]))
+    return "", 200
+
+
+@flask.route("/cicd", methods=["POST"])
+def cicd_message():
     content = request.get_json()
     client.loop.create_task(cicd.send(content["message"]))
     return "", 200
@@ -91,12 +105,18 @@ async def on_ready():
     print("ready")
     global blockz
     global cicd
+    global prod_crashes
+    global dev_crashes
     channels = client.get_all_channels()
     for channel in channels:
         if channel.name == "blockz":
             blockz = channel
         if channel.name == "ci_cd":
             cicd = channel
+        if channel.name == "dev_crashes":
+            dev_crashes == channel
+        if channel.name == "prod_crashes":
+            prod_crashes == channel
     fl = threading.Thread(target=start_flask)
     fl.start()
     redeploy_thread(redeploy_dev)
